@@ -22,16 +22,47 @@ defmodule Uiua do
     Regex.scan(@reg, str)
   end
 
-  def add(x, y) do
-    x + y
+  def pairwise_operate(func, first, second) do
+    for i <- 0..(Enum.count(first) - 1) do
+      apply(func, [[Enum.at(first, i), Enum.at(second, i)]])
+    end
   end
 
-  def subtract(x, y) do
-    x - y
+  defmacro make_arrayable(func, first, second) do
+    quote do
+      cond do
+        is_list(unquote(first)) and is_list(unquote(second))
+        and unquote(Enum.count(first) == Enum.count(second))
+          ->
+            quote do
+
+            pairwise_operate(unquote(func), unquote(first), unquote(second))
+            end
+        true
+          -> nil
+      end
+    end
   end
 
-  def range(x) do
-    Range.new(0, x - 1) |> Enum.to_list()
+  def add([x, y | rest]) do
+    cond do
+      is_list(y) and is_list(x) and Enum.count(x) == Enum.count(y) ->
+        pairwise_operate(&__MODULE__.add/1, x, y)
+      is_list(y) ->
+        result = Enum.map(y, fn elem -> elem + x end)
+        [result | rest]
+      true ->
+        [y + x | rest]
+    end
+  end
+
+
+  def subtract([x, y | rest]) do
+    [y - x | rest]
+  end
+
+  def range([x | rest]) do
+    [Range.new(0, x - 1) |> Enum.to_list() | rest]
   end
 
   def restack(indices, stack) do
@@ -75,14 +106,18 @@ defmodule Uiua do
     restack([2,0,1], stack)
   end
 
-  def noop(_stack) do
-    nil
+  def noop(stack) do
+    [nil | stack]
+  end
+
+  def not(stack) do
+    [1 | stack] |> flip |> subtract
   end
 
 
   @keymap %{
-    "+" => &__MODULE__.add/2,
-    "-" => &__MODULE__.subtract/2,
+    "+" => &__MODULE__.add/1,
+    "-" => &__MODULE__.subtract/1,
     "⇡" => &__MODULE__.range/1,
     "⇌" => &Enum.reverse/1,
     "." => &__MODULE__.duplicate/1,
@@ -106,13 +141,15 @@ defmodule Uiua do
 
           Map.has_key?(@keymap, i) ->
             func = Map.get(@keymap, i)
-            arity = :erlang.fun_info(func)[:arity]
-            args = Enum.take(acc, arity)
-            [apply(func, args) | Enum.drop(acc, arity)]
+            func.(acc)
 
           true ->
             nil
         end
     end
+  end
+
+  def run(str) do
+    str |> parse() |> eval()
   end
 end
