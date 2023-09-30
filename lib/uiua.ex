@@ -16,53 +16,25 @@ defmodule Uiua do
     :world
   end
 
+  require Stack
+
+
   @reg ~r/[^\d|\s\[\]]|[[:alnum:]]+|\[.*]/u
 
   def parse(str) do
     Regex.scan(@reg, str)
   end
 
-  def pairwise_operate(func, first, second) do
-    for i <- 0..(Enum.count(first) - 1) do
-      apply(func, [[Enum.at(first, i), Enum.at(second, i)]])
-    end
+  Stack.defstack add(x, y) do
+    x + y
   end
 
-  defmacro make_arrayable(func, first, second) do
-    quote do
-      cond do
-        is_list(unquote(first)) and is_list(unquote(second)) and
-            unquote(Enum.count(first) == Enum.count(second)) ->
-          quote do
-            pairwise_operate(unquote(func), unquote(first), unquote(second))
-          end
-
-        true ->
-          nil
-      end
-    end
+  Stack.defstack subtract(x, y) do
+    y - x
   end
 
-  def add([x, y | rest]) do
-    cond do
-      is_list(y) and is_list(x) and Enum.count(x) == Enum.count(y) ->
-        pairwise_operate(&__MODULE__.add/1, x, y)
-
-      is_list(y) ->
-        result = Enum.map(y, fn elem -> elem + x end)
-        [result | rest]
-
-      true ->
-        [y + x | rest]
-    end
-  end
-
-  def subtract([x, y | rest]) do
-    [y - x | rest]
-  end
-
-  def range([x | rest]) do
-    [Range.new(0, x - 1) |> Enum.to_list() | rest]
+  Stack.defstack range(x) do
+    Range.new(0, x - 1) |> Enum.to_list()
   end
 
   def restack(indices, stack) do
@@ -160,3 +132,16 @@ defmodule Uiua do
     str |> parse() |> eval()
   end
 end
+
+"""
+defmodule ExampleOne do
+  require Uiua
+  Uiua.defstack add(x,y) do
+    x + y
+  end
+
+  Uiua.defstack uni(x) do
+    x
+  end
+end
+"""

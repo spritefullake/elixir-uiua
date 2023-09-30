@@ -21,13 +21,23 @@ defmodule UiuaTest do
   end
 
   test "add" do
-    assert Uiua.run("+ 1 2") == [3]
-    assert Uiua.run("+1 [2 3 4]") == [3, 4, 5]
+    assert Uiua.add([1, 2]) == [3]
+    assert Uiua.add([1, [2, 3, 4]]) == [[3, 4, 5]]
+    assert Uiua.add([[1, 2, 3], [4, 5, 6]]) == [[5,7,9]]
   end
 
   test "not" do
     assert Uiua.not([0]) == [1]
     assert Uiua.not([1]) == [0]
     assert Uiua.not([[0, 1, 1, 0]]) == [[1, 0, 0, 1]]
+  end
+
+  test "generic list same size" do
+    assert Stack.same_size_lists([[1,1], [2,3], [4,5]]) == true
+    assert Stack.same_size_lists([1, [2], [4]]) == false
+  end
+
+  test "elementwise operate" do
+    assert Stack.elementwise_operate(fn x, y -> x + y end, [[1,2,3], [4,5,6]]) == [5,7,9]
   end
 end
