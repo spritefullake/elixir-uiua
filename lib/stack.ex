@@ -39,7 +39,11 @@ defmodule Stack do
     end
   end
 
-
+  @doc"""
+  This function helps decide how to apply a certain function depending on if the arguments are
+  all lists, or one is a single item and the rest is a list, or if it is something else.
+  The point of this function is to elevate a singular function to operate on lists.
+  """
   @spec arrayize(function(), list()) :: list()
   def arrayize(func, args) do
     cond do
