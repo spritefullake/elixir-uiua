@@ -84,11 +84,8 @@ defmodule Stack do
   end
 
   defmacro __using__(_opts) do
-    alias Stack
     quote do
-      def defstack(clause, do: expression) do
-        defstack(clause, do: expression)
-      end
+      import unquote(__MODULE__) # allow defstack to be used in client modules
     end
   end
 end

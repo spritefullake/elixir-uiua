@@ -16,7 +16,7 @@ defmodule Uiua do
     :world
   end
 
-  require Stack
+  use Stack
 
 
   @reg ~r/[^\d|\s\[\]]|[[:alnum:]]+|\[.*]/u
@@ -25,15 +25,15 @@ defmodule Uiua do
     Regex.scan(@reg, str)
   end
 
-  Stack.defstack add(x, y) do
+  defstack add(x, y) do
     x + y
   end
 
-  Stack.defstack subtract(x, y) do
+  defstack subtract(x, y) do
     y - x
   end
 
-  Stack.defstack range(x) do
+  defstack range(x) do
     Range.new(0, x - 1) |> Enum.to_list()
   end
 
